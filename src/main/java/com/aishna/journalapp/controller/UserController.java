@@ -1,17 +1,13 @@
 package com.aishna.journalapp.controller;
-
-import com.aishna.journalapp.entity.JournalEntry;
 import com.aishna.journalapp.entity.User;
-import com.aishna.journalapp.service.JournalEntryService;
+import com.aishna.journalapp.repository.UserRepository;
 import com.aishna.journalapp.service.UserService;
-import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/user")
@@ -20,24 +16,25 @@ public class UserController {
     @Autowired
     private UserService userService;
 
-    @GetMapping
-    public List<User> getAllUser(){
-        return userService.getAll();
-    }
+    @Autowired
+    private UserRepository userRepository;
 
-    @PostMapping
-    public void createUser(@RequestBody User user){
-        userService.saveEntry(user);
-    }
+    @PutMapping
+    public ResponseEntity<User> updateUser(@RequestBody User user){
 
-    @PutMapping("/{username}")
-    public ResponseEntity<?> updateUser(@RequestBody User user,@PathVariable String username){
+        Authentication authentication=SecurityContextHolder.getContext().getAuthentication();
+        String username=authentication.getName();
         User userInDb=userService.findByUsername(username);
-        if(userInDb!=null){
-            userInDb.setUsername(user.getUsername());
-            userInDb.setPassword(user.getPassword());
-            userService.saveEntry(userInDb);
-        }
+        userInDb.setUsername(user.getUsername());
+        userInDb.setPassword(user.getPassword());
+        userService.saveNewUser(userInDb);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
+    @DeleteMapping
+    public ResponseEntity<?> deleteUserById(){
+        Authentication authentication=SecurityContextHolder.getContext().getAuthentication();
+        userRepository.deleteByUsername(authentication.getName());
+        return  new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 }
