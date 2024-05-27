@@ -25,5 +25,6 @@ public class User {
 
     @DBRef //creating ref of journal entries in user collection
     private List<JournalEntry> journalEntries=new ArrayList<>();
+    private  List<String> roles;
 
 }
